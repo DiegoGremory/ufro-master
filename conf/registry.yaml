@@ -1,0 +1,18 @@
+# Registry of PP2 services
+# Each service has: name, endpoint_verify, threshold
+# This registry can be used for multiple PP2 services with fusion rules
+services:
+  - name: pp2_main
+    endpoint_verify: http://52.22.115.249:5000/verify
+    threshold: 0.75
+    enabled: true
+    description: "Main PP2 facial verification service"
+    
+  # Example: Additional PP2 services for fusion (if needed)
+  # - name: pp2_backup
+  #   endpoint_verify: http://backup-server:5000/verify
+  #   threshold: 0.75
+  #   enabled: false
+  #   description: "Backup PP2 service"
+
+
