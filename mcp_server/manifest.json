@@ -1,0 +1,37 @@
+{
+  "name": "ufro-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for UFRO project with identify_person and ask_normativa tools",
+  "tools": [
+    {
+      "name": "identify_person",
+      "description": "Identify a person from provided data",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "person_data": {
+            "type": "object",
+            "description": "Person identification data"
+          }
+        },
+        "required": ["person_data"]
+      }
+    },
+    {
+      "name": "ask_normativa",
+      "description": "Ask a question about normative regulations",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Query string about normative regulations"
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  ]
+}
+
+
