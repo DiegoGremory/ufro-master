@@ -1,5 +1,5 @@
 """
-Client for PP1 service - Chatbot endpoint
+Cliente para servicio PP1 - Endpoint de chatbot
 """
 import httpx
 import os
@@ -20,16 +20,16 @@ async def ask_pp1(
     timeout: Optional[float] = None
 ) -> Dict[str, Any]:
     """
-    Ask query to PP1 service (chatbot)
+    Consulta al servicio PP1 (chatbot)
     
     Args:
-        message: Query message
-        provider: LLM provider (deepseek or chatgpt), defaults to env var
-        k: Top K results, defaults to env var
-        timeout: Request timeout in seconds, defaults to env var
+        message: Mensaje de consulta
+        provider: Proveedor LLM (deepseek o chatgpt), por defecto desde variable de entorno
+        k: Top K resultados, por defecto desde variable de entorno
+        timeout: Timeout de request en segundos, por defecto desde variable de entorno
         
     Returns:
-        Response from PP1 service with answer
+        Respuesta del servicio PP1 con la respuesta
     """
     url = f"{PP1_URL}/"
     provider = provider or PP1_PROVIDER

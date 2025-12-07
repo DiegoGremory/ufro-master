@@ -1,5 +1,5 @@
 """
-MongoDB aggregation queries for /metrics/* endpoints and analytics
+Queries de agregación MongoDB para endpoints /metrics/* y analítica
 """
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
@@ -9,13 +9,13 @@ import uuid
 
 async def save_trace(trace_data: Dict[str, Any]) -> str:
     """
-    Save a trace to MongoDB
+    Guardar una traza en MongoDB
     
     Args:
-        trace_data: Trace data dictionary
+        trace_data: Diccionario con datos de la traza
         
     Returns:
-        Trace ID
+        ID de la traza
     """
     if not motor_db:
         await init_motor()
@@ -30,13 +30,13 @@ async def save_trace(trace_data: Dict[str, Any]) -> str:
 
 async def get_identification_rate(time_range: str = "24h") -> Dict[str, Any]:
     """
-    Get identification success rate
+    Obtener tasa de éxito de identificación
     
     Args:
-        time_range: Time range (e.g., "24h", "7d", "30d")
+        time_range: Rango de tiempo (ej: "24h", "7d", "30d")
         
     Returns:
-        Identification rate metrics
+        Métricas de tasa de identificación
     """
     if not motor_db:
         await init_motor()
@@ -106,13 +106,13 @@ async def get_identification_rate(time_range: str = "24h") -> Dict[str, Any]:
 
 async def get_query_statistics(time_range: str = "24h") -> Dict[str, Any]:
     """
-    Get query statistics
+    Obtener estadísticas de consultas
     
     Args:
-        time_range: Time range
+        time_range: Rango de tiempo
         
     Returns:
-        Query statistics
+        Estadísticas de consultas
     """
     if not motor_db:
         await init_motor()
@@ -155,14 +155,14 @@ async def get_query_statistics(time_range: str = "24h") -> Dict[str, Any]:
 
 async def get_metric_aggregation(metric_name: str, time_range: str = "24h") -> Dict[str, Any]:
     """
-    Get aggregated metric data
+    Obtener datos agregados de métrica
     
     Args:
-        metric_name: Name of the metric
-        time_range: Time range (e.g., "24h", "7d", "30d")
+        metric_name: Nombre de la métrica
+        time_range: Rango de tiempo (ej: "24h", "7d", "30d")
         
     Returns:
-        Aggregated metric data
+        Datos agregados de la métrica
     """
     if not motor_db:
         await init_motor()
@@ -201,13 +201,13 @@ async def get_metric_aggregation(metric_name: str, time_range: str = "24h") -> D
 
 async def get_metrics_by_category(category: str) -> List[Dict[str, Any]]:
     """
-    Get all metrics in a category
+    Obtener todas las métricas de una categoría
     
     Args:
-        category: Metric category
+        category: Categoría de métrica
         
     Returns:
-        List of metrics
+        Lista de métricas
     """
     if not motor_db:
         await init_motor()

@@ -1,5 +1,5 @@
 """
-Load PP2 service registry from YAML configuration
+Cargar registry de servicios PP2 desde configuración YAML
 """
 import yaml
 import os
@@ -9,21 +9,21 @@ from pathlib import Path
 
 def load_registry(registry_path: str = None) -> List[Dict[str, Any]]:
     """
-    Load PP2 service registry from YAML file
+    Cargar registry de servicios PP2 desde archivo YAML
     
     Args:
-        registry_path: Path to registry.yaml file
+        registry_path: Ruta al archivo registry.yaml
         
     Returns:
-        List of service configurations
+        Lista de configuraciones de servicios
     """
     if registry_path is None:
-        # Default to conf/registry.yaml relative to project root
+        # Por defecto conf/registry.yaml relativo a la raíz del proyecto
         project_root = Path(__file__).parent.parent
         registry_path = project_root / "conf" / "registry.yaml"
     
     if not os.path.exists(registry_path):
-        # Return default single service configuration
+        # Retornar configuración de servicio único por defecto
         return [{
             "name": "pp2_default",
             "endpoint_verify": os.getenv("PP2_URL", "http://52.22.115.249:5000") + "/verify",
@@ -36,7 +36,7 @@ def load_registry(registry_path: str = None) -> List[Dict[str, Any]]:
     
     services = config.get("services", [])
     
-    # Filter only enabled services
+    # Filtrar solo servicios habilitados
     enabled_services = [
         service for service in services 
         if service.get("enabled", True)
@@ -47,14 +47,14 @@ def load_registry(registry_path: str = None) -> List[Dict[str, Any]]:
 
 def get_service_by_name(name: str, registry_path: str = None) -> Dict[str, Any]:
     """
-    Get a specific service by name from registry
+    Obtener un servicio específico por nombre desde el registry
     
     Args:
-        name: Service name
-        registry_path: Path to registry.yaml file
+        name: Nombre del servicio
+        registry_path: Ruta al archivo registry.yaml
         
     Returns:
-        Service configuration or None if not found
+        Configuración del servicio o None si no se encuentra
     """
     services = load_registry(registry_path)
     

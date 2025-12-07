@@ -1,5 +1,5 @@
 """
-Fusion rules τ/δ for combining results from multiple PP2 services
+Reglas de fusión τ/δ para combinar resultados de múltiples servicios PP2
 """
 from typing import List, Dict, Any
 import statistics
@@ -7,14 +7,14 @@ import statistics
 
 def apply_tau_rule(results: List[Dict[str, Any]], threshold: float) -> Dict[str, Any]:
     """
-    Apply τ (tau) rule for fusion - Majority voting with threshold
+    Aplicar regla τ (tau) para fusión - Votación por mayoría con umbral
     
     Args:
-        results: List of results from PP2 services
-        threshold: Threshold value for decision
+        results: Lista de resultados de servicios PP2
+        threshold: Valor de umbral para decisión
         
     Returns:
-        Fused result with verified status and average confidence
+        Resultado fusionado con estado verificado y confianza promedio
     """
     if not results:
         return {
@@ -24,7 +24,7 @@ def apply_tau_rule(results: List[Dict[str, Any]], threshold: float) -> Dict[str,
             "error": "No results to fuse"
         }
     
-    # Filter successful results
+    # Filtrar resultados exitosos
     successful_results = [
         r for r in results 
         if r.get("success", False) and r.get("verified", False)
@@ -39,11 +39,11 @@ def apply_tau_rule(results: List[Dict[str, Any]], threshold: float) -> Dict[str,
             "successful_services": 0
         }
     
-    # Calculate average confidence
+    # Calcular confianza promedio
     confidences = [r.get("confidence", 0.0) for r in successful_results]
     avg_confidence = statistics.mean(confidences)
     
-    # Majority rule: verified if more than 50% agree and avg confidence >= threshold
+    # Regla de mayoría: verificado si más del 50% está de acuerdo y confianza promedio >= umbral
     majority_threshold = len(results) / 2
     verified = (
         len(successful_results) > majority_threshold and 
@@ -63,15 +63,15 @@ def apply_tau_rule(results: List[Dict[str, Any]], threshold: float) -> Dict[str,
 
 def apply_delta_rule(results: List[Dict[str, Any]], threshold: float, margin: float = 0.1) -> Dict[str, Any]:
     """
-    Apply δ (delta) rule for fusion - Weighted average with margin
+    Aplicar regla δ (delta) para fusión - Promedio ponderado con margen
     
     Args:
-        results: List of results from PP2 services
-        threshold: Threshold value for decision
-        margin: Margin for confidence adjustment (default: 0.1)
+        results: Lista de resultados de servicios PP2
+        threshold: Valor de umbral para decisión
+        margin: Margen para ajuste de confianza (por defecto: 0.1)
         
     Returns:
-        Fused result with verified status and weighted confidence
+        Resultado fusionado con estado verificado y confianza ponderada
     """
     if not results:
         return {
@@ -81,7 +81,7 @@ def apply_delta_rule(results: List[Dict[str, Any]], threshold: float, margin: fl
             "error": "No results to fuse"
         }
     
-    # Filter successful results
+    # Filtrar resultados exitosos
     successful_results = [
         r for r in results 
         if r.get("success", False)
@@ -96,19 +96,19 @@ def apply_delta_rule(results: List[Dict[str, Any]], threshold: float, margin: fl
             "successful_services": 0
         }
     
-    # Calculate weighted average (weights based on individual confidence)
+    # Calcular promedio ponderado (pesos basados en confianza individual)
     confidences = [r.get("confidence", 0.0) for r in successful_results]
-    weights = [c for c in confidences]  # Weight by confidence itself
+    weights = [c for c in confidences]  # Pesar por la confianza misma
     
     if sum(weights) == 0:
         weighted_confidence = 0.0
     else:
         weighted_confidence = sum(c * w for c, w in zip(confidences, weights)) / sum(weights)
     
-    # Apply margin adjustment
+    # Aplicar ajuste de margen
     adjusted_threshold = threshold - margin
     
-    # Verified if weighted confidence >= adjusted threshold
+    # Verificado si confianza ponderada >= umbral ajustado
     verified = weighted_confidence >= adjusted_threshold
     
     return {

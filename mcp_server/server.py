@@ -1,5 +1,5 @@
 """
-MCP server with tools:
+Servidor MCP con tools:
 - identify_person
 - ask_normativa
 """
@@ -22,7 +22,7 @@ import time
 
 
 class MCPServer:
-    """MCP Server implementation"""
+    """Implementación de servidor MCP"""
     
     def __init__(self):
         self.tools = {
@@ -36,22 +36,22 @@ class MCPServer:
         filename: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        MCP tool: Identify person using PP2 facial verification
+        Tool MCP: Identificar persona usando verificación facial PP2
         
         Args:
-            image_base64: Base64 encoded image
-            filename: Optional filename (defaults to image.jpg)
+            image_base64: Imagen codificada en base64
+            filename: Nombre de archivo opcional (por defecto image.jpg)
             
         Returns:
-            Identification result with confidence score
+            Resultado de identificación con score de confianza
         """
         try:
-            # Decode base64 image
+            # Decodificar imagen base64
             image_bytes = base64.b64decode(image_base64)
             image_file = io.BytesIO(image_bytes)
             filename = filename or "image.jpg"
             
-            # Call PP2 verification
+            # Llamar verificación PP2
             result = await verify_person(image_file, filename)
             
             return {
@@ -76,15 +76,15 @@ class MCPServer:
         k: Optional[int] = None
     ) -> Dict[str, Any]:
         """
-        MCP tool: Ask normative question using PP1 chatbot
+        Tool MCP: Consultar pregunta normativa usando chatbot PP1
         
         Args:
-            query: Query string about normative regulations
-            provider: LLM provider (deepseek or chatgpt)
-            k: Top K results
+            query: String de consulta sobre normativa
+            provider: Proveedor LLM (deepseek o chatgpt)
+            k: Top K resultados
             
         Returns:
-            Answer from normative database
+            Respuesta de base de datos normativa
         """
         try:
             result = await ask_pp1(message=query, provider=provider, k=k)
@@ -105,13 +105,13 @@ class MCPServer:
     
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Handle MCP request
+        Manejar request MCP
         
         Args:
-            request: MCP request object
+            request: Objeto request MCP
             
         Returns:
-            MCP response object
+            Objeto response MCP
         """
         method = request.get("method")
         params = request.get("params", {})
@@ -212,26 +212,26 @@ class MCPServer:
         }
 
 
-# FastAPI app for MCP server
+# Aplicación FastAPI para servidor MCP
 mcp_app = FastAPI(title="UFRO MCP Server", version="1.0.0")
 server = MCPServer()
 
 
 @mcp_app.on_event("startup")
 async def startup_event():
-    """Initialize MongoDB connection on startup"""
+    """Inicializar conexión MongoDB al iniciar"""
     await init_motor()
 
 
 @mcp_app.on_event("shutdown")
 async def shutdown_event():
-    """Close MongoDB connection on shutdown"""
+    """Cerrar conexión MongoDB al cerrar"""
     await close_motor()
 
 
 @mcp_app.post("/mcp")
 async def mcp_endpoint(request: Dict[str, Any]):
-    """MCP endpoint handler"""
+    """Manejador de endpoint MCP"""
     try:
         response = await server.handle_request(request)
         return JSONResponse(content=response)

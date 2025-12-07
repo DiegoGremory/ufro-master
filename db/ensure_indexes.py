@@ -1,5 +1,5 @@
 """
-Create indexes and TTL indexes for MongoDB collections
+Crear índices e índices TTL para colecciones MongoDB
 """
 from db.mongo import init_pymongo, get_db_name
 from pymongo import ASCENDING, DESCENDING
@@ -8,28 +8,28 @@ from datetime import datetime
 
 def ensure_indexes():
     """
-    Create all necessary indexes and TTL indexes
+    Crear todos los índices necesarios e índices TTL
     """
     db = init_pymongo()
     
-    # Indexes for traces collection
+    # Índices para colección traces
     traces_collection = db.traces
     traces_collection.create_index([("timestamp", DESCENDING)])
     traces_collection.create_index([("request_id", ASCENDING)], unique=True)
     traces_collection.create_index([("person_identified", ASCENDING), ("timestamp", DESCENDING)])
     traces_collection.create_index([("person_id", ASCENDING)])
-    # TTL index: expires after 90 days
+    # Índice TTL: expira después de 90 días
     traces_collection.create_index([("created_at", ASCENDING)], expireAfterSeconds=7776000)
     
-    # Indexes for metrics collection
+    # Índices para colección metrics
     metrics_collection = db.metrics
     metrics_collection.create_index([("timestamp", DESCENDING)])
     metrics_collection.create_index([("metric_name", ASCENDING), ("timestamp", DESCENDING)])
     metrics_collection.create_index([("metric_type", ASCENDING)])
-    # TTL index: expires after 30 days
+    # Índice TTL: expira después de 30 días
     metrics_collection.create_index([("timestamp", ASCENDING)], expireAfterSeconds=2592000)
     
-    # Indexes for service_logs collection
+    # Índices para colección service_logs
     service_logs_collection = db.service_logs
     service_logs_collection.create_index([("timestamp", DESCENDING)])
     service_logs_collection.create_index([("service_name", ASCENDING), ("timestamp", DESCENDING)])
@@ -37,12 +37,12 @@ def ensure_indexes():
     service_logs_collection.create_index([("endpoint", ASCENDING)])
     service_logs_collection.create_index([("status_code", ASCENDING)])
     service_logs_collection.create_index([("error", ASCENDING)])
-    # TTL index: expires after 60 days
+    # Índice TTL: expira después de 60 días
     service_logs_collection.create_index([("created_at", ASCENDING)], expireAfterSeconds=5184000)
     
-    print("Indexes created successfully")
-    print(f"Database: {get_db_name()}")
-    print(f"Collections indexed: traces, metrics, service_logs")
+    print("Índices creados exitosamente")
+    print(f"Base de datos: {get_db_name()}")
+    print(f"Colecciones indexadas: traces, metrics, service_logs")
 
 
 if __name__ == "__main__":

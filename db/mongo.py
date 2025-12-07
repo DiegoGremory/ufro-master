@@ -1,5 +1,5 @@
 """
-MongoDB connection using motor (async) or pymongo
+Conexión MongoDB usando motor (async) o pymongo
 """
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
@@ -7,22 +7,22 @@ from typing import Optional
 import os
 
 
-# Async client (motor)
+# Cliente async (motor)
 motor_client: Optional[AsyncIOMotorClient] = None
 motor_db = None
 
 
-# Sync client (pymongo)
+# Cliente sync (pymongo)
 pymongo_client: Optional[MongoClient] = None
 pymongo_db = None
 
 
 def get_mongo_uri() -> str:
-    """Get MongoDB URI from environment"""
-    # Support both MONGODB_URI and MONGO_URI for compatibility
+    """Obtener URI de MongoDB desde variables de entorno"""
+    # Soporta tanto MONGODB_URI como MONGO_URI para compatibilidad
     uri = os.getenv("MONGODB_URI") or os.getenv("MONGO_URI")
     if not uri:
-        # Default with authentication if provided
+        # Por defecto con autenticación si se proporciona
         username = os.getenv("MONGO_USER", "admin")
         password = os.getenv("MONGO_PASSWORD", "admin123")
         host = os.getenv("MONGO_HOST", "localhost")
@@ -32,12 +32,12 @@ def get_mongo_uri() -> str:
 
 
 def get_db_name() -> str:
-    """Get database name from environment"""
+    """Obtener nombre de base de datos desde variables de entorno"""
     return os.getenv("DB_NAME") or os.getenv("MONGODB_DB", "ufro")
 
 
 async def init_motor():
-    """Initialize async MongoDB client (motor)"""
+    """Inicializar cliente MongoDB async (motor)"""
     global motor_client, motor_db
     uri = get_mongo_uri()
     db_name = get_db_name()
@@ -47,7 +47,7 @@ async def init_motor():
 
 
 def init_pymongo():
-    """Initialize sync MongoDB client (pymongo)"""
+    """Inicializar cliente MongoDB sync (pymongo)"""
     global pymongo_client, pymongo_db
     uri = get_mongo_uri()
     db_name = get_db_name()
@@ -57,14 +57,14 @@ def init_pymongo():
 
 
 async def close_motor():
-    """Close async MongoDB client"""
+    """Cerrar cliente MongoDB async"""
     global motor_client
     if motor_client:
         motor_client.close()
 
 
 def close_pymongo():
-    """Close sync MongoDB client"""
+    """Cerrar cliente MongoDB sync"""
     global pymongo_client
     if pymongo_client:
         pymongo_client.close()

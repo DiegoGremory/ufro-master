@@ -1,6 +1,6 @@
 """
-Client for PP2 service - Facial verification endpoint
-with async httpx, timeouts, and service_logs tracing
+Cliente para servicio PP2 - Endpoint de verificación facial
+con httpx async, timeouts y trazas a service_logs
 """
 import httpx
 import os
@@ -31,21 +31,21 @@ async def _save_service_log(
     request_id: Optional[str] = None
 ) -> str:
     """
-    Save service call log to MongoDB service_logs collection
+    Guarda log de llamada a servicio en la colección service_logs de MongoDB
     
     Args:
-        service_name: Name of the service (e.g., "PP2")
-        endpoint: Endpoint URL called
-        method: HTTP method used
-        request_data: Request data sent
-        response_data: Response data received
-        status_code: HTTP status code
-        response_time_ms: Response time in milliseconds
-        error: Error message if any
-        request_id: Optional request ID for correlation
+        service_name: Nombre del servicio (ej: "PP2")
+        endpoint: URL del endpoint llamado
+        method: Método HTTP usado
+        request_data: Datos de request enviados
+        response_data: Datos de response recibidos
+        status_code: Código de estado HTTP
+        response_time_ms: Tiempo de respuesta en milisegundos
+        error: Mensaje de error si existe
+        request_id: ID de request opcional para correlación
         
     Returns:
-        Log ID
+        ID del log
     """
     if not motor_db:
         await init_motor()
@@ -69,8 +69,8 @@ async def _save_service_log(
     try:
         await motor_db.service_logs.insert_one(log_entry)
     except Exception as e:
-        # Log error but don't fail the main operation
-        print(f"Warning: Failed to save service log: {str(e)}")
+        # Registrar error pero no fallar la operación principal
+        print(f"Advertencia: Error al guardar log de servicio: {str(e)}")
     
     return log_id
 
@@ -83,34 +83,34 @@ async def verify_person(
     request_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Verify person against PP2 service (facial verification)
-    Uses httpx async with configurable timeouts and logs to service_logs
+    Verifica persona contra servicio PP2 (verificación facial)
+    Usa httpx async con timeouts configurables y registra en service_logs
     
     Args:
-        image_file: Binary file-like object containing the image
-        filename: Name of the file (must have .jpg, .jpeg, or .png extension)
-        endpoint: PP2 verify endpoint URL, defaults to env var
-        timeout: Request timeout in seconds, defaults to env var
-        request_id: Optional request ID for correlation in logs
+        image_file: Objeto tipo archivo binario con la imagen
+        filename: Nombre del archivo (debe tener extensión .jpg, .jpeg o .png)
+        endpoint: URL del endpoint PP2 verify, por defecto desde variable de entorno
+        timeout: Timeout de request en segundos, por defecto desde variable de entorno
+        request_id: ID de request opcional para correlación en logs
         
     Returns:
-        Verification result with confidence score
+        Resultado de verificación con score de confianza
     """
     url = endpoint or f"{PP2_URL}/verify"
     timeout_value = timeout or PP2_TIMEOUT
     request_id = request_id or str(uuid.uuid4())
     start_time = time.time()
     
-    # Validate file extension
+    # Validar extensión de archivo
     valid_extensions = {'.jpg', '.jpeg', '.png'}
     file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
     if f'.{file_ext}' not in valid_extensions:
         error_result = {
             "success": False,
-            "error": f"Invalid file extension. Must be one of: {valid_extensions}",
+            "error": f"Extensión de archivo inválida. Debe ser una de: {valid_extensions}",
             "timestamp": datetime.utcnow().isoformat()
         }
-        # Log validation error
+        # Registrar error de validación
         await _save_service_log(
             service_name="PP2",
             endpoint=url,
@@ -124,18 +124,18 @@ async def verify_person(
         )
         return error_result
     
-    # Read image content (reset file pointer if needed)
+    # Leer contenido de imagen (resetear puntero de archivo si es necesario)
     if hasattr(image_file, 'seek'):
         image_file.seek(0)
     image_content = image_file.read()
     file_size = len(image_content)
     
-    # Prepare multipart form data
+    # Preparar datos multipart form
     files = {
         "file": (filename, image_content, f"image/{file_ext}")
     }
     
-    # Configure timeouts with httpx.Timeout
+    # Configurar timeouts con httpx.Timeout
     timeout_config = httpx.Timeout(
         connect=PP2_CONNECT_TIMEOUT,
         read=PP2_READ_TIMEOUT,
@@ -155,11 +155,11 @@ async def verify_person(
             response = await client.post(url, files=files)
             response_time_ms = (time.time() - start_time) * 1000
             
-            # Try to parse JSON response
+            # Intentar parsear respuesta JSON
             try:
                 result = response.json()
             except Exception:
-                result = {"raw_text": response.text[:500]}  # Limit text size
+                result = {"raw_text": response.text[:500]}  # Limitar tamaño de texto
             
             response.raise_for_status()
             
@@ -172,7 +172,7 @@ async def verify_person(
                 "timestamp": datetime.utcnow().isoformat()
             }
             
-            # Log successful request
+            # Registrar request exitoso
             await _save_service_log(
                 service_name="PP2",
                 endpoint=url,
@@ -195,7 +195,7 @@ async def verify_person(
             "timestamp": datetime.utcnow().isoformat()
         }
         
-        # Log timeout
+        # Registrar timeout
         await _save_service_log(
             service_name="PP2",
             endpoint=url,
@@ -219,14 +219,14 @@ async def verify_person(
             "timestamp": datetime.utcnow().isoformat()
         }
         
-        # Try to get error response body
+        # Intentar obtener cuerpo de respuesta de error
         try:
             error_body = e.response.json()
             error_result["error_details"] = error_body
         except Exception:
             error_result["error_details"] = e.response.text[:500]
         
-        # Log HTTP error
+        # Registrar error HTTP
         await _save_service_log(
             service_name="PP2",
             endpoint=url,
@@ -249,7 +249,7 @@ async def verify_person(
             "timestamp": datetime.utcnow().isoformat()
         }
         
-        # Log general error
+        # Registrar error general
         await _save_service_log(
             service_name="PP2",
             endpoint=url,
@@ -271,28 +271,28 @@ async def verify_concurrent(
     request_id: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """
-    Concurrent verification of multiple images against PP2 endpoint
-    All requests are logged to service_logs with correlation IDs
+    Verificación concurrente de múltiples imágenes contra endpoint PP2
+    Todas las requests se registran en service_logs con IDs de correlación
     
     Args:
-        images: List of tuples (image_file, filename)
-        endpoint: PP2 verify endpoint URL
-        request_id: Optional base request ID for correlation
+        images: Lista de tuplas (image_file, filename)
+        endpoint: URL del endpoint PP2 verify
+        request_id: ID de request base opcional para correlación
         
     Returns:
-        List of verification results
+        Lista de resultados de verificación
     """
     base_request_id = request_id or str(uuid.uuid4())
     tasks = []
     
     for idx, (image_file, filename) in enumerate(images):
-        # Generate unique request ID for each concurrent request
+        # Generar ID de request único para cada request concurrente
         concurrent_request_id = f"{base_request_id}-{idx}"
         tasks.append(verify_person(image_file, filename, endpoint, request_id=concurrent_request_id))
     
     results = await asyncio.gather(*tasks, return_exceptions=True)
     
-    # Convert exceptions to error dicts
+    # Convertir excepciones a diccionarios de error
     processed_results = []
     for idx, result in enumerate(results):
         if isinstance(result, Exception):
@@ -301,7 +301,7 @@ async def verify_concurrent(
                 "error": str(result),
                 "timestamp": datetime.utcnow().isoformat()
             }
-            # Log exception
+            # Registrar excepción
             await _save_service_log(
                 service_name="PP2",
                 endpoint=endpoint or f"{PP2_URL}/verify",
