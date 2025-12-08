@@ -3,13 +3,13 @@ Queries de agregación MongoDB para endpoints /metrics/* y analítica
 """
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-from db.mongo import motor_db, init_motor
+from db.mongo import init_motor
 import uuid
 
 
 async def save_trace(trace_data: Dict[str, Any]) -> str:
     """
-    Guardar una traza en MongoDB
+    Guardar una traza en MongoDB (legacy - usar save_access_log para H7)
     
     Args:
         trace_data: Diccionario con datos de la traza
@@ -17,15 +17,73 @@ async def save_trace(trace_data: Dict[str, Any]) -> str:
     Returns:
         ID de la traza
     """
-    if not motor_db:
+    # Importar módulo completo para acceder a motor_db actualizado
+    import db.mongo as mongo_module
+    
+    if mongo_module.motor_db is None:
         await init_motor()
     
     trace_id = str(uuid.uuid4())
     trace_data["_id"] = trace_id
     trace_data["created_at"] = datetime.utcnow()
     
-    await motor_db.traces.insert_one(trace_data)
+    # Usar motor_db del módulo (referencia actualizada)
+    await mongo_module.motor_db.traces.insert_one(trace_data)
     return trace_id
+
+
+async def save_access_log(access_log_data: Dict[str, Any]) -> str:
+    """
+    Guardar access log en MongoDB según especificación H7
+    
+    Estructura esperada:
+    {
+        "request_id": "uuid4",
+        "ts": "ISO datetime",
+        "route": "/identify-and-answer",
+        "user": {"id": "...", "type": "student|faculty|admin|external", "role": "..."},
+        "input": {"has_image": true, "has_question": true, "image_hash": "sha256:...", "size_bytes": 12345},
+        "decision": "identified|ambiguous|unknown",
+        "identity": {...},
+        "timing_ms": 154.2,
+        "status_code": 200,
+        "errors": null,
+        "pp2_summary": {"queried": 12, "timeouts": 1},
+        "pp1_used": true,
+        "ip": "anonymized/iphash"
+    }
+    
+    Args:
+        access_log_data: Diccionario con datos del access log
+        
+    Returns:
+        ID del access log
+    """
+    # Importar módulo completo para acceder a motor_db actualizado
+    import db.mongo as mongo_module
+    
+    if mongo_module.motor_db is None:
+        await init_motor()
+    
+    log_id = str(uuid.uuid4())
+    access_log_data["_id"] = log_id
+    
+    # Asegurar que ts esté en formato datetime si viene como string
+    if "ts" in access_log_data:
+        if isinstance(access_log_data["ts"], str):
+            # Si viene como ISO string, mantenerlo
+            pass
+        else:
+            access_log_data["ts"] = access_log_data["ts"].isoformat() if hasattr(access_log_data["ts"], "isoformat") else datetime.utcnow().isoformat()
+    else:
+        access_log_data["ts"] = datetime.utcnow().isoformat()
+    
+    # Agregar created_at para TTL si es necesario
+    access_log_data["created_at"] = datetime.utcnow()
+    
+    # Usar motor_db del módulo (referencia actualizada)
+    await mongo_module.motor_db.access_logs.insert_one(access_log_data)
+    return log_id
 
 
 async def get_identification_rate(time_range: str = "24h") -> Dict[str, Any]:
@@ -38,7 +96,9 @@ async def get_identification_rate(time_range: str = "24h") -> Dict[str, Any]:
     Returns:
         Métricas de tasa de identificación
     """
-    if not motor_db:
+    import db.mongo as mongo_module
+    
+    if mongo_module.motor_db is None:
         await init_motor()
     
     time_deltas = {
@@ -94,7 +154,7 @@ async def get_identification_rate(time_range: str = "24h") -> Dict[str, Any]:
         }
     ]
     
-    result = await motor_db.traces.aggregate(pipeline).to_list(length=1)
+    result = await mongo_module.motor_db.traces.aggregate(pipeline).to_list(length=1)
     return result[0] if result else {
         "total": 0,
         "identified": 0,
@@ -114,7 +174,9 @@ async def get_query_statistics(time_range: str = "24h") -> Dict[str, Any]:
     Returns:
         Estadísticas de consultas
     """
-    if not motor_db:
+    import db.mongo as mongo_module
+    
+    if mongo_module.motor_db is None:
         await init_motor()
     
     time_deltas = {
@@ -144,7 +206,7 @@ async def get_query_statistics(time_range: str = "24h") -> Dict[str, Any]:
         }
     ]
     
-    result = await motor_db.traces.aggregate(pipeline).to_list(length=1)
+    result = await mongo_module.motor_db.traces.aggregate(pipeline).to_list(length=1)
     return result[0] if result else {
         "total_queries": 0,
         "avg_processing_time": 0.0,
@@ -164,7 +226,9 @@ async def get_metric_aggregation(metric_name: str, time_range: str = "24h") -> D
     Returns:
         Datos agregados de la métrica
     """
-    if not motor_db:
+    import db.mongo as mongo_module
+    
+    if mongo_module.motor_db is None:
         await init_motor()
     
     time_deltas = {
@@ -195,7 +259,7 @@ async def get_metric_aggregation(metric_name: str, time_range: str = "24h") -> D
         }
     ]
     
-    result = await motor_db.metrics.aggregate(pipeline).to_list(length=1)
+    result = await mongo_module.motor_db.metrics.aggregate(pipeline).to_list(length=1)
     return result[0] if result else {}
 
 
@@ -209,10 +273,12 @@ async def get_metrics_by_category(category: str) -> List[Dict[str, Any]]:
     Returns:
         Lista de métricas
     """
-    if not motor_db:
+    import db.mongo as mongo_module
+    
+    if mongo_module.motor_db is None:
         await init_motor()
     
-    cursor = motor_db.metrics.find({"category": category})
+    cursor = mongo_module.motor_db.metrics.find({"category": category})
     return await cursor.to_list(length=None)
 
 
